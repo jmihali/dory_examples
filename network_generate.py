@@ -3,7 +3,7 @@
 # Alessio Burrello <alessio.burrello@unibo.it>
 #
 # Copyright (C) 2019-2020 University of Bologna
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -45,6 +45,8 @@ def main():
     parser.add_argument('--backend', default = 'MCU', help = 'MCU or Occamy')
     parser.add_argument('--number_of_clusters', type=int, default = 1, help = 'Number of clusters in the target architecture.')
     parser.add_argument('--optional', default = 'auto', help = 'auto (based on layer precision, 8bits or mixed-sw), 8bit, mixed-hw, mixed-sw')
+    parser.add_argument('--number_of_deployed_layers', type=int, default = 100, help = 'Number of layers in the target architecture.')
+
     args = parser.parse_args()
 
     for files in os.listdir(args.network_dir):
@@ -54,6 +56,7 @@ def main():
             for sub_files in files:
                 if 'onnx' in files:
                     net = files
+
     if args.frontend == 'Nemo':
         sys.path.append('../Frontend/NEMO/')
         from NEMO_Onnx import NEMO_onnx as onnx_manager
@@ -72,9 +75,9 @@ def main():
         sys.path.append('../NN_Deployment/Occamy/')
         from Model_deployment_Occamy import Model_deployment_Occamy as model_deploy
         type_data = 'float'
-        
+
     model_deploy('GAP8', args.chip).print_model_network(PULP_Nodes_Graph,
-                            100,
+                            args.number_of_deployed_layers,
                             args.network_dir,
                             100,
                             args.verbose_level,
@@ -85,7 +88,7 @@ def main():
                             args.l2_buffer_size,
                             args.fc_frequency,
                             args.cl_frequency,
-                            args.Bn_Relu_Bits, 
+                            args.Bn_Relu_Bits,
                             args.sdk,
                             args.backend,
                             args.dma_parallelization,
