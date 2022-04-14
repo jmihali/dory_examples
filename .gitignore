@@ -6,5 +6,6 @@ __pycache__
 BUILD
 BUILD/*
 logs/
-application/*
 application
+application_dvs
+dvs_generation/*.json
