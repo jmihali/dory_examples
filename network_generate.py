@@ -46,6 +46,8 @@ def main():
     parser.add_argument('--number_of_clusters', type=int, default = 1, help = 'Number of clusters in the target architecture.')
     parser.add_argument('--optional', default = 'auto', help = 'auto (based on layer precision, 8bits or mixed-sw), 8bit, mixed-hw, mixed-sw')
     parser.add_argument('--number_of_deployed_layers', type=int, default = 100, help = 'Number of layers in the target architecture.')
+    parser.add_argument('--number_of_test_inputs', type=int, default = 1, help = 'Number of test input files to be fed to the network.')
+
 
     args = parser.parse_args()
 
@@ -94,7 +96,8 @@ def main():
                             args.dma_parallelization,
                             args.number_of_clusters,
                             args.optional,
-                            type_data = type_data)
+                            type_data = type_data,
+                            test_inputs = args.number_of_test_inputs)
 
 if __name__ == '__main__':
     main()
