@@ -9,7 +9,7 @@ def combine_network_template_dicts(template_data_cnn, template_data_tcn):
     assert template_data_cnn.keys() == template_data_tcn.keys(), 'cnn and tcn dict keys do not match'
     template_data_dvs = {}
     for key in template_data_cnn.keys():
-        if key in ['sdk', 'verbose', 'performance', 'verbose_level', 'fc_frequency', 'cl_frequency', 'master_stack', 'slave_stack', 'dma_parallelization', 'l2_buffer_size', 'l1_buffer', 'type']:
+        if key in ['sdk', 'verbose', 'performance', 'verbose_level', 'fc_frequency', 'cl_frequency', 'master_stack', 'slave_stack', 'dma_parallelization', 'l2_buffer_size', 'l1_buffer', 'type', 'test']:
             assert template_data_cnn[key]==template_data_tcn[key], f'cnn and tcn values for key \'{key}\' do not match - cnn: {template_data_cnn[key]}, tcn: {template_data_tcn[key]}'
             template_data_dvs[key]=template_data_cnn[key]
         else:
