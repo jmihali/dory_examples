@@ -615,9 +615,9 @@ int network_setup()
    }
 % if 'Check_all' in verbose_level:
    if (check_weights_cnn[layer_number] == sum_weights)
-     printf("Layer %-3d: Checksum = %-12d, FLASH %-12d, Check OK\n", layer_number, check_weights_cnn[layer_number], sum_weights);
+     printf("CNN Layer %-3d: Checksum = %-12d, FLASH %-12d, Check OK\n", layer_number, check_weights_cnn[layer_number], sum_weights);
    else
-     printf("Layer %-3d: Checksum = %-12d, FLASH %-12d, Check FAILED\n", layer_number, check_weights_cnn[layer_number], sum_weights);
+     printf("CNN Layer %-3d: Checksum = %-12d, FLASH %-12d, Check FAILED\n", layer_number, check_weights_cnn[layer_number], sum_weights);
    layer_number +=1;
 % endif
  }
@@ -653,9 +653,9 @@ int network_setup()
    }
 % if 'Check_all' in verbose_level:
    if (check_weights_tcn[layer_number] == sum_weights)
-     printf("Layer %-3d: Checksum = %-12d, FLASH %-12d, Check OK\n", layer_number, check_weights_tcn[layer_number], sum_weights);
+     printf("TCN Layer %-3d: Checksum = %-12d, FLASH %-12d, Check OK\n", layer_number, check_weights_tcn[layer_number], sum_weights);
    else
-     printf("Layer %-3d: Checksum = %-12d, FLASH %-12d, Check FAILED\n", layer_number, check_weights_tcn[layer_number], sum_weights);
+     printf("TCN Layer %-3d: Checksum = %-12d, FLASH %-12d, Check FAILED\n", layer_number, check_weights_tcn[layer_number], sum_weights);
    layer_number +=1;
 % endif
  }
@@ -671,7 +671,7 @@ int network_setup()
  rdDone = 0;
  int flashBuffSize = FLASH_BUFF_SIZE * sizeof(char);
  // loop on chunk in file
- while(rdDone < (${int(PULP_Nodes_Graph_cnn[0]['input_activation_dimensions'])} / sizeof(char)))
+ while(rdDone < (${int(PULP_Nodes_Graph_cnn[0]['input_activation_dimensions']*len(PULP_Nodes_Graph_cnn[0]['check_sum_in']))} / sizeof(char)))
  {
    // read from HyperFlash
    int size = pi_fs_read(file, flashBuffer, flashBuffSize);
