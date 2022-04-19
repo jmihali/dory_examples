@@ -292,9 +292,13 @@ ${int((PULP_Nodes_Graph_tcn[i-1]['weights_dimension_L3']))}${'' if loop.last els
 % endif
 % endfor
 };
-static int check_activations_cnn[${len(PULP_Nodes_Graph_cnn)}] = {\
+static int check_activations_cnn[${len(PULP_Nodes_Graph_cnn)}][${len(PULP_Nodes_Graph_cnn[0]['check_sum_in'])}] = {
 % for i in range(len(PULP_Nodes_Graph_cnn)):
-${PULP_Nodes_Graph_cnn[i]['check_sum_in']}${'' if loop.last else ', '}\
+ {\
+ % for j in range(len(PULP_Nodes_Graph_cnn[0]['check_sum_in'])):
+${PULP_Nodes_Graph_cnn[i]['check_sum_in'][j]}${'' if loop.last else ', '}\
+ % endfor
+}${'' if loop.last else ', '}
 % endfor
 };
 static int check_activations_tcn[${len(PULP_Nodes_Graph_tcn)}] = {\
@@ -404,9 +408,13 @@ ${PULP_Nodes_Graph_tcn[i]['inmul2']}${'' if loop.last else ', '}\
 % endif
 % endfor
 };
-static int check_activations_out_cnn[${len(PULP_Nodes_Graph_cnn)}] = {\
+static int check_activations_cnn[${len(PULP_Nodes_Graph_cnn)}][${len(PULP_Nodes_Graph_cnn[0]['check_sum_out'])}] = {
 % for i in range(len(PULP_Nodes_Graph_cnn)):
-${PULP_Nodes_Graph_cnn[i]['check_sum_out']}${'' if loop.last else ', '}\
+ {\
+ % for j in range(len(PULP_Nodes_Graph_cnn[0]['check_sum_out'])):
+${PULP_Nodes_Graph_cnn[i]['check_sum_out'][j]}${'' if loop.last else ', '}\
+ % endfor
+}${'' if loop.last else ', '}
 % endfor
 };
 static int check_activations_out_tcn[${len(PULP_Nodes_Graph_tcn)}] = {\
