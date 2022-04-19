@@ -824,3 +824,91 @@ void network_run(unsigned int L3_weights_size_cnn, unsigned int L3_weights_size_
 /* ---------------------------------- */
 /* --------- SECTION 0 END ---------- */
 /* ---------------------------------- */
+/*
+ - initial copies from L3 of input
+ - copies of weights of first 2 layers of the CNN
+*/
+/* ---------------------------------- */
+/* -------- SECTION 1 BEGIN --------- */
+/* ---------------------------------- */
+
+ if(pi_core_id()==0)
+ {
+#ifdef PROFILE_APPLICATION
+   pi_perf_stop();
+   pi_perf_reset();
+   pi_perf_conf(1<<PI_PERF_CYCLES);
+   pi_perf_start();
+#endif
+/*
+ - CNN first layer weights allocation and copy
+*/
+   dory_L2_alloc(&L2_buffer_allocation,
+     &L2_buffer_allocation_end,
+     &L2_weights_1,
+     ${int(PULP_Nodes_Graph_cnn[0]['weights_dimension'])},
+     begin_end_n // begin is 1, end is 0
+     );
+/*
+ - input allocation and copy
+*/
+% if test:
+   dory_L2_alloc(&L2_buffer_allocation,
+     &L2_buffer_allocation_end,
+     &L2_input,
+     ${int(PULP_Nodes_Graph_cnn[0]['input_activation_dimensions'])},
+     begin_end_n // begin is 1, end is 0
+     );
+   pi_cl_ram_read(&ram, activations_input, L2_input, ${int(PULP_Nodes_Graph_cnn[0]['input_activation_dimensions'])}, &buff_req1);
+   pi_cl_ram_read_wait(&buff_req1);
+% else:
+   dory_L2_alloc(&L2_buffer_allocation,
+     &L2_buffer_allocation_end,
+     &L2_input,
+     ${int(PULP_Nodes_Graph_cnn[0]['input_activation_dimensions'])},
+     begin_end_n // begin is 1, end is 0
+     );
+% endif
+   begin_end_n = !begin_end_n;
+   transfer_weights = L2_weights_1;
+   exec_weights = L2_weights_1;
+   pi_cl_ram_read(&ram, L3_weights_internal, transfer_weights, ${int(PULP_Nodes_Graph_cnn[0]['weights_dimension'])}, &buff_req1);
+   pi_cl_ram_read_wait(&buff_req1);
+
+% if 'Gemm' in PULP_Nodes_Graph_cnn[1]['name'] or 'Conv' in PULP_Nodes_Graph_cnn[1]['name']:
+/*
+ - CNN second layer weights allocation
+*/
+   d_buffering_weights_t = !d_buffering_weights_t;
+   dory_L2_alloc(&L2_buffer_allocation,
+     &L2_buffer_allocation_end,
+     &L2_weights_2,
+     ${int(PULP_Nodes_Graph_cnn[1]['weights_dimension'])}- ${int(PULP_Nodes_Graph_cnn[0]['weights_dimension'])},
+     begin_end_n // begin is 1, end is 0
+     );
+   transfer_weights = d_buffering_weights_t ? L2_weights_2 : L2_weights_1;
+% endif
+/*
+ - output of the first CNN layer allocation
+*/
+   dory_L2_alloc(&L2_buffer_allocation,
+     &L2_buffer_allocation_end,
+     &L2_output,
+     ${int(PULP_Nodes_Graph_cnn[0]['output_activation_dimensions'])},
+     begin_end_n // begin is 1, end is 0
+     );
+   if(L2_output == NULL) return -1;
+   begin_end_n = !begin_end_n;
+
+#ifdef PROFILE_APPLICATION
+   pi_perf_stop();
+   perf_cyc =  pi_perf_read(PI_PERF_CYCLES);
+   cycles_alloc_weights_input_output += perf_cyc;
+   //printf("[%d] Allocation for 1st&2nd layer weights, input and output of first layer finished - num_cycles: %d\n", pi_core_id(), perf_cyc);
+#endif
+ }
+
+/* ---------------------------------- */
+/* --------- SECTION 1 END ---------- */
+/* ---------------------------------- */
+
