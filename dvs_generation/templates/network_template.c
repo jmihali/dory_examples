@@ -408,7 +408,7 @@ ${PULP_Nodes_Graph_tcn[i]['inmul2']}${'' if loop.last else ', '}\
 % endif
 % endfor
 };
-static int check_activations_cnn[${len(PULP_Nodes_Graph_cnn)}][${len(PULP_Nodes_Graph_cnn[0]['check_sum_out'])}] = {
+static int check_activations_out_cnn[${len(PULP_Nodes_Graph_cnn)}][${len(PULP_Nodes_Graph_cnn[0]['check_sum_out'])}] = {
 % for i in range(len(PULP_Nodes_Graph_cnn)):
  {\
  % for j in range(len(PULP_Nodes_Graph_cnn[0]['check_sum_out'])):
@@ -690,8 +690,9 @@ void pulp_parallel(void *arg)
 
 void network_run_FabricController()
 {
- int arg[1];
- arg[0] = (unsigned int) L3_weights_size;
+ int arg[2];
+ arg[0] = (unsigned int) L3_weights_size_cnn;
+ arg[1] = (unsigned int) L3_weights_size_tcn;
  PMU_set_voltage(1000, 0);
  pi_time_wait_us(10000);
  pi_freq_set(PI_FREQ_DOMAIN_FC, ${fc_frequency});
@@ -722,3 +723,104 @@ void network_run_FabricController()
  // closing of the cluster
  pi_cluster_close(&cluster_dev);
 }
+
+
+int memId;
+char* L2_output;
+char* L2_input;
+char* L2_weights_1;
+char* L2_weights_2;
+char* L2_buffer_allocation;
+char* L2_buffer_tofree_copy;
+int L2_buffer_allocation_end;
+${type} *l1_buffer;
+uint8_t * bypass_activations;
+uint8_t * activation_to_keep;
+char *exec_weights, *transfer_weights, *bypass_weights;
+int L3_weights_internal;
+
+void network_run(unsigned int L3_weights_size_cnn, unsigned int L3_weights_size_tcn)
+{
+/*
+ - initial buffer allocation L2 and L1
+ - variable declaration
+*/
+/* ---------------------------------- */
+/* -------- SECTION 0 BEGIN --------- */
+/* ---------------------------------- */
+#ifdef PROFILE_APPLICATION
+ int perf_cyc;
+ int cycle_network_execution = 0;
+ int cycles_alloc_l1_l2_buffer = 0;
+ int cycles_alloc_weights_input_output = 0;
+ int cycles_copy_weights_next_layer = 0;
+ int cycles_input_check = 0;
+ int cycles_output_check = 0;
+ int cycles_dealloc_alloc_weights = 0;
+#endif
+ uint16_t out_mult = 0;
+ uint16_t out_shift = 0;
+ uint16_t inmul1 = 0;
+ uint16_t inmul2 = 0;
+ int branch_active = 0;
+ int branch_keep_active = 0;
+ int counter = 0;
+ int counter_keep = 0;
+ int valid = 0;
+ static int keeping = 0;
+ static int activation_to_keep_delloced = 0;
+ int branch_output_index = 0;
+ static int keep_index = 0;
+ bypass_activations = 0;
+ activation_to_keep = 0;
+ int bypass_dimension = 0;
+ int bypass_to_dealloc = 0;
+ int activation_dimension = 0;
+ int d_buffering_weights_t = 0;
+ int error_presence = 0;
+ int bypass_side = 0;
+ int bypass_used_as_out = 0;
+ int input_used_as_out = 0;
+ int valid_keep = 0;
+ int bypass_side_keep = 0;
+ int d_buffering_weights_e = 0;
+ int d_buffering_inputs = 0;
+ int d_buffering_outputs = 0;
+ int begin_end_n = 1;
+ int residual_number = 0;
+ pi_cl_ram_alloc_req_t alloc_req_L3;
+ pi_cl_ram_req_t buff_req1;
+ L3_weights_internal = L3_weights;
+ transfer_weights = d_buffering_weights_t ? L2_weights_2 : L2_weights_1;
+ exec_weights = d_buffering_weights_e ? L2_weights_2 : L2_weights_1;
+ bypass_weights = d_buffering_weights_e ? L2_weights_2 : L2_weights_1;
+ pi_cl_alloc_req_t alloc_req = {0};
+ pi_cl_free_req_t free_req = {0};
+
+ if (pi_core_id()==0)
+ {
+#ifdef PROFILE_APPLICATION
+   pi_perf_stop();
+   pi_perf_reset();
+   pi_perf_conf(1<<PI_PERF_CYCLES);
+   pi_perf_start();
+#endif
+   pi_cl_l2_malloc((uint32_t) ${l2_buffer_size}, &alloc_req);
+   L2_buffer_allocation = pi_cl_l2_malloc_wait(&alloc_req);
+   L2_buffer_tofree_copy = L2_buffer_allocation;
+   L2_buffer_allocation_end = L2_buffer_allocation + ${l2_buffer_size};
+   l1_buffer = pmsis_l1_malloc((uint32_t) ${l1_buffer});
+#ifdef VERBOSE
+   printf("\nL2 Buffer alloc initial\t@ 0x%08x:\t%s\n", (unsigned int)L2_buffer_allocation, L2_buffer_allocation?"Ok":"Failed");
+   printf("L1 Buffer alloc initial\t@ 0x%08x:\t%s\n\n", (unsigned int)l1_buffer, l1_buffer?"Ok":"Failed");
+#endif
+#ifdef PROFILE_APPLICATION
+   pi_perf_stop();
+   perf_cyc =  pi_perf_read(PI_PERF_CYCLES);
+   cycles_alloc_l1_l2_buffer += perf_cyc;
+   //printf("[%d] L2&L1 Buffer allocation finished - num_cycles: %d\n", pi_core_id(), perf_cyc);
+#endif
+ }
+/* ---------------------------------- */
+/* --------- SECTION 0 END ---------- */
+/* ---------------------------------- */
