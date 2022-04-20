@@ -734,6 +734,7 @@ void network_run_FabricController()
 
 int memId;
 char* L2_output;
+char* L2_output_window;
 char* L2_input;
 char* L2_input_window;
 char* L2_weights_1;
@@ -901,11 +902,11 @@ void network_run(unsigned int L3_weights_size_cnn, unsigned int L3_weights_size_
 */
    dory_L2_alloc(&L2_buffer_allocation,
      &L2_buffer_allocation_end,
-     &L2_output,
+     &L2_output_window,
      ${int(PULP_Nodes_Graph_cnn[0]['output_activation_dimensions'])},
      begin_end_n // begin is 1, end is 0
      );
-   if(L2_output == NULL) return -1;
+   if(L2_output_window == NULL) return -1;
    begin_end_n = !begin_end_n;
 
 #ifdef PROFILE_APPLICATION
@@ -1011,7 +1012,7 @@ void network_run(unsigned int L3_weights_size_cnn, unsigned int L3_weights_size_
       L3_weights_internal + cumulative_weights_dimension_cnn[i],
       L2_input_window,
       bypass_activations,
-      L2_output,
+      L2_output_window,
       exec_weights,
       l1_buffer,
       &ram,
@@ -1089,16 +1090,16 @@ void network_run(unsigned int L3_weights_size_cnn, unsigned int L3_weights_size_
           printf("Out in L3\n");
         else {
           printf("Checking output of layer %d...\n", i);
-          check_layer(L2_output, check_activations_out_cnn[i][t], check_activations_out_dimension_cnn[i]);
+          check_layer(L2_output_window, check_activations_out_cnn[i][t], check_activations_out_dimension_cnn[i]);
         }
       }
       else
       {
-        check_layer_last((int32_t *) L2_output, check_activations_out_cnn[i][t], check_activations_out_dimension_cnn[i]);
+        check_layer_last((int32_t *) L2_output_window, check_activations_out_cnn[i][t], check_activations_out_dimension_cnn[i]);
       }
       if (i==${check_layer_cnn})
       {
-        check_layer_plus(L2_output, check_activations_out_dimension_cnn[i]);
+        check_layer_plus(L2_output_window, check_activations_out_dimension_cnn[i]);
       }
   #ifdef PROFILE_APPLICATION
       pi_perf_stop();
@@ -1118,7 +1119,7 @@ void network_run(unsigned int L3_weights_size_cnn, unsigned int L3_weights_size_
       pi_perf_start();
   #endif
       if (i == ${len(PULP_Nodes_Graph_cnn) - 1})
-          check_layer_last((int32_t *) L2_output, check_activations_out_cnn[i][t], check_activations_out_dimension_cnn[i]);
+          check_layer_last((int32_t *) L2_output_window, check_activations_out_cnn[i][t], check_activations_out_dimension_cnn[i]);
   #ifdef PROFILE_APPLICATION
       pi_perf_stop();
       perf_cyc =  pi_perf_read(PI_PERF_CYCLES);
@@ -1209,7 +1210,7 @@ void network_run(unsigned int L3_weights_size_cnn, unsigned int L3_weights_size_
             transfer_weights = d_buffering_weights_t ? L2_weights_2 : L2_weights_1;
           }
         }
-        L2_input_window = L2_output;
+        L2_input_window = L2_output_window;
         if (pi_core_id()==0)
         {
           if (branch_input_cnn[i]==1 || branch_change_cnn[i-1] == 1)
@@ -1261,7 +1262,7 @@ void network_run(unsigned int L3_weights_size_cnn, unsigned int L3_weights_size_
             pi_cl_ram_alloc(&ram, (uint32_t) check_activations_out_dimension_cnn[i], &alloc_req);
             pi_cl_ram_alloc_wait(&alloc_req, &temp_adress);
             layers_pointers_cnn[residual_number] = temp_adress;
-            pi_cl_ram_write(&ram, temp_adress, L2_output, (uint32_t) check_activations_out_dimension_cnn[i], &buff_req1);
+            pi_cl_ram_write(&ram, temp_adress, L2_output_window, (uint32_t) check_activations_out_dimension_cnn[i], &buff_req1);
             pi_cl_ram_write_wait(&buff_req1);
             residual_number++;
           }
@@ -1273,7 +1274,7 @@ void network_run(unsigned int L3_weights_size_cnn, unsigned int L3_weights_size_
             pi_cl_ram_alloc(&ram, (uint32_t) check_activations_out_dimension_cnn[i], &alloc_req);
             pi_cl_ram_alloc_wait(&alloc_req, &temp_adress);
             layers_pointers_cnn[residual_number] = temp_adress;
-            pi_cl_ram_write(&ram, temp_adress, L2_output, (uint32_t) check_activations_out_dimension_cnn[i], &buff_req1);
+            pi_cl_ram_write(&ram, temp_adress, L2_output_window, (uint32_t) check_activations_out_dimension_cnn[i], &buff_req1);
             pi_cl_ram_write_wait(&buff_req1);
             residual_number++;
           }
@@ -1303,7 +1304,7 @@ void network_run(unsigned int L3_weights_size_cnn, unsigned int L3_weights_size_
         }
         dory_L2_alloc(&L2_buffer_allocation,
           &L2_buffer_allocation_end,
-          &L2_output,
+          &L2_output_window,
           check_activations_out_dimension_cnn[i+1],
           begin_end_n // begin is 1, end is 0
           );
