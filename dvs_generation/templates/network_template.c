@@ -55,6 +55,11 @@ unsigned int PMU_set_voltage(unsigned int Voltage, unsigned int CheckFrequencies
 }
 % endif
 
+const char * input_files_cnn[] = {
+  % for t in range(test_inputs_cnn):
+  ${f"\"inputs_{t}.hex\""}${'' if loop.last else ', '}
+  % endfor
+};
 // allocation of buffers with parameters needed by the network execution
 const char * L3_weights_files_cnn[] = {
   ${files_list_cnn}
@@ -659,25 +664,27 @@ int network_setup()
    layer_number +=1;
 % endif
  }
-
- // load inputs
- file = pi_fs_open(&fs, "inputs.hex", 0);
- if (file == NULL)
- {
-   printf("file open failed\n");
-   return -1;
- }
+ // load CNN inputs
  activations_input = L3_weights+rdDone;
- rdDone = 0;
- int flashBuffSize = FLASH_BUFF_SIZE * sizeof(char);
- // loop on chunk in file
- while(rdDone < (${int(PULP_Nodes_Graph_cnn[0]['input_activation_dimensions']*test_inputs_cnn)} / sizeof(char)))
+ for (int t=0; t<${test_inputs_cnn}; t++)
  {
-   // read from HyperFlash
-   int size = pi_fs_read(file, flashBuffer, flashBuffSize);
-   // write to HyperRam
-   pi_ram_write(&ram, activations_input+rdDone, flashBuffer, (uint32_t) size);
-   rdDone += size / sizeof(char);
+  file = pi_fs_open(&fs, input_files_cnn[t], 0);
+  if (file == NULL)
+  {
+    printf("file open failed\n");
+    return -1;
+  }
+  int flashBuffSize = FLASH_BUFF_SIZE * sizeof(char);
+  rdDone = 0;
+  // loop on chunk in file
+  while(rdDone < (${int(PULP_Nodes_Graph_cnn[0]['input_activation_dimensions'])} / sizeof(char)))
+  {
+    // read from HyperFlash
+    int size = pi_fs_read(file, flashBuffer, flashBuffSize);
+    // write to HyperRam
+    pi_ram_write(&ram, activations_input+t*${int(PULP_Nodes_Graph_cnn[0]['input_activation_dimensions'])}+rdDone, flashBuffer, (uint32_t) size);
+    rdDone += size / sizeof(char);
+  }
  }
  return 1;
 }
@@ -860,7 +867,7 @@ void network_run(unsigned int L3_weights_size_cnn, unsigned int L3_weights_size_
      ${int(PULP_Nodes_Graph_cnn[0]['input_activation_dimensions']*test_inputs_cnn)},
      begin_end_n // begin is 1, end is 0
      );
-   pi_cl_ram_read(&ram, activations_input, L2_input, ${int(PULP_Nodes_Graph_cnn[0]['input_activation_dimensions'])}, &buff_req1);
+   pi_cl_ram_read(&ram, activations_input, L2_input, ${int(PULP_Nodes_Graph_cnn[0]['input_activation_dimensions']*test_inputs_cnn)}, &buff_req1);
    pi_cl_ram_read_wait(&buff_req1);
 % else:
    dory_L2_alloc(&L2_buffer_allocation,
