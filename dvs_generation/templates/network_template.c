@@ -292,10 +292,10 @@ ${int((PULP_Nodes_Graph_tcn[i-1]['weights_dimension_L3']))}${'' if loop.last els
 % endif
 % endfor
 };
-static int check_activations_cnn[${len(PULP_Nodes_Graph_cnn)}][${len(PULP_Nodes_Graph_cnn[0]['check_sum_in'])}] = {
+static int check_activations_cnn[${len(PULP_Nodes_Graph_cnn)}][${test_inputs_cnn}] = {
 % for i in range(len(PULP_Nodes_Graph_cnn)):
  {\
- % for j in range(len(PULP_Nodes_Graph_cnn[0]['check_sum_in'])):
+ % for j in range(test_inputs_cnn):
 ${PULP_Nodes_Graph_cnn[i]['check_sum_in'][j]}${'' if loop.last else ', '}\
  % endfor
 }${'' if loop.last else ', '}
@@ -671,7 +671,7 @@ int network_setup()
  rdDone = 0;
  int flashBuffSize = FLASH_BUFF_SIZE * sizeof(char);
  // loop on chunk in file
- while(rdDone < (${int(PULP_Nodes_Graph_cnn[0]['input_activation_dimensions']*len(PULP_Nodes_Graph_cnn[0]['check_sum_in']))} / sizeof(char)))
+ while(rdDone < (${int(PULP_Nodes_Graph_cnn[0]['input_activation_dimensions']*test_inputs_cnn)} / sizeof(char)))
  {
    // read from HyperFlash
    int size = pi_fs_read(file, flashBuffer, flashBuffSize);
@@ -857,7 +857,7 @@ void network_run(unsigned int L3_weights_size_cnn, unsigned int L3_weights_size_
    dory_L2_alloc(&L2_buffer_allocation,
      &L2_buffer_allocation_end,
      &L2_input,
-     ${int(PULP_Nodes_Graph_cnn[0]['input_activation_dimensions']*len(PULP_Nodes_Graph_cnn[0]['check_sum_in']))},
+     ${int(PULP_Nodes_Graph_cnn[0]['input_activation_dimensions']*test_inputs_cnn)},
      begin_end_n // begin is 1, end is 0
      );
    pi_cl_ram_read(&ram, activations_input, L2_input, ${int(PULP_Nodes_Graph_cnn[0]['input_activation_dimensions'])}, &buff_req1);
@@ -866,7 +866,7 @@ void network_run(unsigned int L3_weights_size_cnn, unsigned int L3_weights_size_
    dory_L2_alloc(&L2_buffer_allocation,
      &L2_buffer_allocation_end,
      &L2_input,
-     ${int(PULP_Nodes_Graph_cnn[0]['input_activation_dimensions']*len(PULP_Nodes_Graph_cnn[0]['check_sum_in']))},
+     ${int(PULP_Nodes_Graph_cnn[0]['input_activation_dimensions']*test_inputs_cnn)},
      begin_end_n // begin is 1, end is 0
      );
 % endif
@@ -924,7 +924,7 @@ void network_run(unsigned int L3_weights_size_cnn, unsigned int L3_weights_size_
 /* -------- SECTION 2 BEGIN --------- */
 /* ---------------------------------- */
 
- for(int t = 0; t < ${len(PULP_Nodes_Graph_cnn[0]['check_sum_in'])}; t++)
+ for(int t = 0; t < ${test_inputs_cnn}; t++)
  {
   printf("=====FEEDING WINDOW %d THROUGH THE CNN...=====\n", t);
   L2_input_window = L2_input + t*check_activations_dimension_cnn[0];
