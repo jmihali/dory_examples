@@ -25,6 +25,8 @@ def combine_makefile_template_dicts(template_data_cnn, template_data_tcn):
         if key in ['platform', 'sdk']:
             assert template_data_cnn[key]==template_data_tcn[key], f'cnn and tcn values for key \'{key}\' do not match - cnn: {template_data_cnn[key]}, tcn: {template_data_tcn[key]}'
             template_data_dvs[key]=template_data_cnn[key]
+        elif key in ['test_inputs']:
+            template_data_dvs[key]=template_data_cnn[key]
         else:
             # combine files from both dicts
             lst = template_data_cnn[key]+template_data_tcn[key]
