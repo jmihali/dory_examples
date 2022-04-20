@@ -1183,7 +1183,7 @@ void network_run(unsigned int L3_weights_size_cnn, unsigned int L3_weights_size_
           d_buffering_weights_e = !d_buffering_weights_e;
           exec_weights = d_buffering_weights_e ? L2_weights_2 : L2_weights_1;
         }
-        if (i < ${len(PULP_Nodes_Graph_cnn) - 1})
+        if (i < ${len(PULP_Nodes_Graph_cnn) - 2})
         {
           // allocation of weights for next next layer, if necessary.
           if (layer_with_weights_cnn[i+2] == 1)
@@ -1208,6 +1208,42 @@ void network_run(unsigned int L3_weights_size_cnn, unsigned int L3_weights_size_
             }
             d_buffering_weights_t = !d_buffering_weights_t;
             transfer_weights = d_buffering_weights_t ? L2_weights_2 : L2_weights_1;
+          }
+        }
+        else
+        {
+          // when reached the last layers, either allocate again the weights of the CNN or the weights of the TCN
+          if (t < ${test_inputs_cnn-1})
+          {
+            // allocate again the first weight layers of the CNN
+            if (layer_with_weights_cnn[${2-len(PULP_Nodes_Graph_cnn)}+i] == 1)
+            {
+              if (d_buffering_weights_e==1)
+              {
+                dory_L2_alloc(&L2_buffer_allocation,
+                  &L2_buffer_allocation_end,
+                  &L2_weights_1,
+                  check_weights_dimension_cnn[${2-len(PULP_Nodes_Graph_cnn)}+i],
+                  begin_end_n // begin is 1, end is 0
+                  );
+              }
+              else
+              {
+                dory_L2_alloc(&L2_buffer_allocation,
+                  &L2_buffer_allocation_end,
+                  &L2_weights_2,
+                  check_weights_dimension_cnn[${2-len(PULP_Nodes_Graph_cnn)}+i],
+                  begin_end_n // begin is 1, end is 0
+                  );
+              }
+              d_buffering_weights_t = !d_buffering_weights_t;
+              transfer_weights = d_buffering_weights_t ? L2_weights_2 : L2_weights_1;
+            }
+          }
+          else
+          {
+            // TODO: allocate weight layers of TCN
+            printf("Allocate weights of TCN (not implemented yet)\n");
           }
         }
         L2_input_window = L2_output_window;
