@@ -78,7 +78,7 @@ def main():
         from Model_deployment_Occamy import Model_deployment_Occamy as model_deploy
         type_data = 'float'
 
-    model_deploy('GAP8', args.chip).print_model_network(PULP_Nodes_Graph,
+    model_deploy('GAP8', args.chip, args.number_of_test_inputs).print_model_network(PULP_Nodes_Graph,
                             args.number_of_deployed_layers,
                             args.network_dir,
                             100,
@@ -96,8 +96,7 @@ def main():
                             args.dma_parallelization,
                             args.number_of_clusters,
                             args.optional,
-                            type_data = type_data,
-                            test_inputs = args.number_of_test_inputs)
+                            type_data = type_data)
 
 if __name__ == '__main__':
     main()

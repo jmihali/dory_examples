@@ -36,7 +36,7 @@ cp application_dvs/cnn/application/DORY_network/inc/pulp_nn_*.h application_dvs/
 cp application_dvs/cnn/application/DORY_network/src/layer*.c application_dvs/dvs/application/DORY_network/src
 cp application_dvs/cnn/application/DORY_network/src/xpulp_nn*.c application_dvs/dvs/application/DORY_network/src
 cp application_dvs/cnn/application/DORY_network/*weights.hex application_dvs/dvs/application/DORY_network
-cp application_dvs/cnn/application/DORY_network/inputs.hex application_dvs/dvs/application/DORY_network
+cp application_dvs/cnn/application/DORY_network/inputs*.hex application_dvs/dvs/application/DORY_network
 cp application_dvs/tcn/application/DORY_network/inc/layer*.h application_dvs/dvs/application/DORY_network/inc
 cp application_dvs/tcn/application/DORY_network/src/layer*.c application_dvs/dvs/application/DORY_network/src
 cp application_dvs/cnn/application/DORY_network/src/xpulp_nn_*.c application_dvs/dvs/application/DORY_network/src
