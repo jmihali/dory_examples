@@ -961,6 +961,18 @@ void network_run(unsigned int L3_weights_size_cnn, unsigned int L3_weights_size_
             pi_cl_ram_read_wait(&buff_req1);
         }
       }
+      else // if the last CNN layer is reached
+      {
+        if (allocate_layer_cnn[0] == 1)
+        {
+          if (L3_layers_cnn[i-1] == 0 && i > 0)
+            pi_cl_ram_read_wait(&buff_req1);
+          pi_cl_ram_read(&ram, L3_weights_internal + cumulative_weights_dimension_cnn[0], transfer_weights, check_weights_dimension_cnn[0], &buff_req1);
+          if (L3_layers_cnn[i] == 1)
+            pi_cl_ram_read_wait(&buff_req1);
+        }
+        // TODO: Do this properly when we need to read the TCN weights
+      }
   #ifdef PROFILE_APPLICATION
       pi_perf_stop();
       perf_cyc =  pi_perf_read(PI_PERF_CYCLES);
@@ -1156,7 +1168,7 @@ void network_run(unsigned int L3_weights_size_cnn, unsigned int L3_weights_size_
       pi_perf_start();
     }
   #endif
-    if (i < ${len(PULP_Nodes_Graph_cnn) - 1})
+    if (i < ${len(PULP_Nodes_Graph_cnn)})
     {
       if(pi_core_id()==0)
       {
@@ -1178,7 +1190,7 @@ void network_run(unsigned int L3_weights_size_cnn, unsigned int L3_weights_size_
             check_weights_dimension_cnn[i],
             begin_end_n // begin is 1, end is 0
             );
-        if (layer_with_weights_cnn[i+1] == 1)
+        if (layer_with_weights_cnn[(i+1)%${len(PULP_Nodes_Graph_cnn)}] == 1) // TODO: Do this properly when we want to load the TCN weights
         {
           d_buffering_weights_e = !d_buffering_weights_e;
           exec_weights = d_buffering_weights_e ? L2_weights_2 : L2_weights_1;
