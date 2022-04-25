@@ -949,29 +949,16 @@ void network_run(unsigned int L3_weights_size_cnn, unsigned int L3_weights_size_
       // 1. copy only if we have to allocate the weights (hence not weights tiled from L3 and not pooling/add layer)
       // 2. waits before the read if we want to implement a double buffering, after if not.
       // Waiting based on the fact if layer need or not transfers from L3 memory.
-      if(i < ${len(PULP_Nodes_Graph_cnn)-1})
+      if (allocate_layer_cnn[(i+1)%${len(PULP_Nodes_Graph_cnn)}] == 1) // modulus op: when reached the last layer, read weights of first layer
       {
-        if (allocate_layer_cnn[i+1] == 1)
-        {
-          if (L3_layers_cnn[i-1] == 0 && i > 0)
-            pi_cl_ram_read_wait(&buff_req1);
-          pi_cl_ram_read(&ram, L3_weights_internal + cumulative_weights_dimension_cnn[i+1], transfer_weights, check_weights_dimension_cnn[i+1], &buff_req1);
-          if (L3_layers_cnn[i] == 1)
-            pi_cl_ram_read_wait(&buff_req1);
-        }
+        if (L3_layers_cnn[i-1] == 0 && i > 0)
+          pi_cl_ram_read_wait(&buff_req1);
+        pi_cl_ram_read(&ram, L3_weights_internal + cumulative_weights_dimension_cnn[(i+1)%${len(PULP_Nodes_Graph_cnn)}], transfer_weights, check_weights_dimension_cnn[(i+1)%${len(PULP_Nodes_Graph_cnn)}], &buff_req1);
+        if (L3_layers_cnn[i] == 1)
+          pi_cl_ram_read_wait(&buff_req1);
       }
-      else // if the last CNN layer is reached
-      {
-        if (allocate_layer_cnn[0] == 1)
-        {
-          if (L3_layers_cnn[i-1] == 0 && i > 0)
-            pi_cl_ram_read_wait(&buff_req1);
-          pi_cl_ram_read(&ram, L3_weights_internal + cumulative_weights_dimension_cnn[0], transfer_weights, check_weights_dimension_cnn[0], &buff_req1);
-          if (L3_layers_cnn[i] == 1)
-            pi_cl_ram_read_wait(&buff_req1);
-        }
-        // TODO: Do this properly when we need to read the TCN weights
-      }
+      // TODO: When the last run is reached, load weights of first TCN layer
+
   #ifdef PROFILE_APPLICATION
       pi_perf_stop();
       perf_cyc =  pi_perf_read(PI_PERF_CYCLES);
