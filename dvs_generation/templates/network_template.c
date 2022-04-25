@@ -852,15 +852,6 @@ void network_run(unsigned int L3_weights_size_cnn, unsigned int L3_weights_size_
     pi_perf_start();
  #endif
  /*
-  - CNN first layer weights allocation and copy
- */
-    dory_L2_alloc(&L2_buffer_allocation,
-      &L2_buffer_allocation_end,
-      &L2_weights_1,
-      ${int(PULP_Nodes_Graph_cnn[0]['weights_dimension'])},
-      begin_end_n // begin is 1, end is 0
-      );
- /*
   - input allocation and copy
  */
  % if test:
@@ -880,6 +871,15 @@ void network_run(unsigned int L3_weights_size_cnn, unsigned int L3_weights_size_
       begin_end_n // begin is 1, end is 0
       );
  % endif
+    /*
+     - CNN first layer weights allocation and copy
+    */
+    dory_L2_alloc(&L2_buffer_allocation,
+      &L2_buffer_allocation_end,
+      &L2_weights_1,
+      ${int(PULP_Nodes_Graph_cnn[0]['weights_dimension'])},
+      begin_end_n // begin is 1, end is 0
+      );
     begin_end_n = !begin_end_n;
     transfer_weights = L2_weights_1;
     exec_weights = L2_weights_1;
@@ -1158,17 +1158,6 @@ void network_run(unsigned int L3_weights_size_cnn, unsigned int L3_weights_size_
     {
       if(pi_core_id()==0)
       {
-        dory_L2_free(&L2_buffer_allocation,
-          &L2_buffer_allocation_end,
-          check_activations_dimension_cnn[i],
-          begin_end_n // begin is 1, end is 0
-          );
-        if (branch_input_cnn[i]==1)
-          dory_L2_free(&L2_buffer_allocation,
-            &L2_buffer_allocation_end,
-            check_activations_dimension_cnn[i],
-            begin_end_n // begin is 1, end is 0
-            );
         // deallocation of weights
         if (layer_with_weights_cnn[i] == 1)
           dory_L2_free(&L2_buffer_allocation,
@@ -1181,69 +1170,20 @@ void network_run(unsigned int L3_weights_size_cnn, unsigned int L3_weights_size_
           d_buffering_weights_e = !d_buffering_weights_e;
           exec_weights = d_buffering_weights_e ? L2_weights_2 : L2_weights_1;
         }
-        if (i < ${len(PULP_Nodes_Graph_cnn) - 2})
-        {
-          // allocation of weights for next next layer, if necessary.
-          if (layer_with_weights_cnn[i+2] == 1)
-          {
-            if (d_buffering_weights_e==1)
-            {
-              dory_L2_alloc(&L2_buffer_allocation,
-                &L2_buffer_allocation_end,
-                &L2_weights_1,
-                check_weights_dimension_cnn[i+2],
-                begin_end_n // begin is 1, end is 0
-                );
-            }
-            else
-            {
-              dory_L2_alloc(&L2_buffer_allocation,
-                &L2_buffer_allocation_end,
-                &L2_weights_2,
-                check_weights_dimension_cnn[i+2],
-                begin_end_n // begin is 1, end is 0
-                );
-            }
-            d_buffering_weights_t = !d_buffering_weights_t;
-            transfer_weights = d_buffering_weights_t ? L2_weights_2 : L2_weights_1;
-          }
-        }
-        else
-        {
-          // when reached the last layers, either allocate again the weights of the CNN or the weights of the TCN
-          if (t < ${test_inputs_cnn-1})
-          {
-            // allocate again the first weight layers of the CNN
-            if (layer_with_weights_cnn[${2-len(PULP_Nodes_Graph_cnn)}+i] == 1)
-            {
-              if (d_buffering_weights_e==1)
-              {
-                dory_L2_alloc(&L2_buffer_allocation,
-                  &L2_buffer_allocation_end,
-                  &L2_weights_1,
-                  check_weights_dimension_cnn[${2-len(PULP_Nodes_Graph_cnn)}+i],
-                  begin_end_n // begin is 1, end is 0
-                  );
-              }
-              else
-              {
-                dory_L2_alloc(&L2_buffer_allocation,
-                  &L2_buffer_allocation_end,
-                  &L2_weights_2,
-                  check_weights_dimension_cnn[${2-len(PULP_Nodes_Graph_cnn)}+i],
-                  begin_end_n // begin is 1, end is 0
-                  );
-              }
-              d_buffering_weights_t = !d_buffering_weights_t;
-              transfer_weights = d_buffering_weights_t ? L2_weights_2 : L2_weights_1;
-            }
-          }
-          else
-          {
-            // TODO: allocate weight layers of TCN
-            printf("Allocate weights of TCN (not implemented yet)\n");
-          }
-        }
+
+        // deallocation of input activations
+        dory_L2_free(&L2_buffer_allocation,
+          &L2_buffer_allocation_end,
+          check_activations_dimension_cnn[i],
+          begin_end_n // begin is 1, end is 0
+          );
+        if (branch_input_cnn[i]==1)
+          dory_L2_free(&L2_buffer_allocation,
+            &L2_buffer_allocation_end,
+            check_activations_dimension_cnn[i],
+            begin_end_n // begin is 1, end is 0
+            );
+
         L2_input_window = L2_output_window;
         if (pi_core_id()==0)
         {
@@ -1342,6 +1282,70 @@ void network_run(unsigned int L3_weights_size_cnn, unsigned int L3_weights_size_
           check_activations_out_dimension_cnn[i+1],
           begin_end_n // begin is 1, end is 0
           );
+
+        if (i < ${len(PULP_Nodes_Graph_cnn) - 2})
+        {
+          // allocation of weights for next next layer, if necessary.
+          if (layer_with_weights_cnn[i+2] == 1)
+          {
+            if (d_buffering_weights_e==1)
+            {
+              dory_L2_alloc(&L2_buffer_allocation,
+                &L2_buffer_allocation_end,
+                &L2_weights_1,
+                check_weights_dimension_cnn[i+2],
+                begin_end_n // begin is 1, end is 0
+                );
+            }
+            else
+            {
+              dory_L2_alloc(&L2_buffer_allocation,
+                &L2_buffer_allocation_end,
+                &L2_weights_2,
+                check_weights_dimension_cnn[i+2],
+                begin_end_n // begin is 1, end is 0
+                );
+            }
+            d_buffering_weights_t = !d_buffering_weights_t;
+            transfer_weights = d_buffering_weights_t ? L2_weights_2 : L2_weights_1;
+          }
+        }
+        else
+        {
+          // when reached the last layers, either allocate again the weights of the CNN or the weights of the TCN
+          if (t < ${test_inputs_cnn-1})
+          {
+            // allocate again the first weight layers of the CNN
+            if (layer_with_weights_cnn[${2-len(PULP_Nodes_Graph_cnn)}+i] == 1)
+            {
+              if (d_buffering_weights_e==1)
+              {
+                dory_L2_alloc(&L2_buffer_allocation,
+                  &L2_buffer_allocation_end,
+                  &L2_weights_1,
+                  check_weights_dimension_cnn[${2-len(PULP_Nodes_Graph_cnn)}+i],
+                  begin_end_n // begin is 1, end is 0
+                  );
+              }
+              else
+              {
+                dory_L2_alloc(&L2_buffer_allocation,
+                  &L2_buffer_allocation_end,
+                  &L2_weights_2,
+                  check_weights_dimension_cnn[${2-len(PULP_Nodes_Graph_cnn)}+i],
+                  begin_end_n // begin is 1, end is 0
+                  );
+              }
+              d_buffering_weights_t = !d_buffering_weights_t;
+              transfer_weights = d_buffering_weights_t ? L2_weights_2 : L2_weights_1;
+            }
+          }
+          else
+          {
+            // TODO: allocate weight layers of TCN
+            printf("Allocate weights of TCN (not implemented yet)\n");
+          }
+        }
         //switching output and input in the buffer for allocation.
         begin_end_n = !begin_end_n;
       }
