@@ -69,7 +69,6 @@ const char * L3_weights_files_tcn[] = {
 };
 int L3_weights_size_cnn[${weights_number_cnn}];
 int L3_weights_size_tcn[${weights_number_tcn}];
-// todo: need to duplicate these as well?
 static int L3_weights;
 static int L3_input;
 static int bypass_L3_input;
@@ -843,6 +842,11 @@ void network_run(unsigned int L3_weights_size_cnn, unsigned int L3_weights_size_
 
  for(int t = 0; t < ${test_inputs_cnn}; t++)
  {
+  printf("=====FEEDING WINDOW %d THROUGH THE CNN...=====\n", t);
+  d_buffering_weights_e = 0;
+  d_buffering_weights_t = 0;
+  begin_end_n = 1;
+
   if(pi_core_id()==0)
   {
  #ifdef PROFILE_APPLICATION
@@ -934,7 +938,6 @@ void network_run(unsigned int L3_weights_size_cnn, unsigned int L3_weights_size_
 /* -------- SECTION 2 BEGIN --------- */
 /* ---------------------------------- */
 
-  printf("=====FEEDING WINDOW %d THROUGH THE CNN...=====\n", t);
   for(int i = 0; i < ${len(PULP_Nodes_Graph_cnn)}; i++)
   {
     if(pi_core_id()==0)
@@ -949,15 +952,17 @@ void network_run(unsigned int L3_weights_size_cnn, unsigned int L3_weights_size_
       // 1. copy only if we have to allocate the weights (hence not weights tiled from L3 and not pooling/add layer)
       // 2. waits before the read if we want to implement a double buffering, after if not.
       // Waiting based on the fact if layer need or not transfers from L3 memory.
-      if (allocate_layer_cnn[(i+1)%${len(PULP_Nodes_Graph_cnn)}] == 1) // modulus op: when reached the last layer, read weights of first layer
-      {
-        if (L3_layers_cnn[i-1] == 0 && i > 0)
-          pi_cl_ram_read_wait(&buff_req1);
-        pi_cl_ram_read(&ram, L3_weights_internal + cumulative_weights_dimension_cnn[(i+1)%${len(PULP_Nodes_Graph_cnn)}], transfer_weights, check_weights_dimension_cnn[(i+1)%${len(PULP_Nodes_Graph_cnn)}], &buff_req1);
-        if (L3_layers_cnn[i] == 1)
-          pi_cl_ram_read_wait(&buff_req1);
+      if (i < ${len(PULP_Nodes_Graph_cnn)-1})
+        {
+        if (allocate_layer_cnn[i+1] == 1) // modulus op: when reached the last layer, read weights of first layer
+        {
+          if (L3_layers_cnn[i-1] == 0 && i > 0)
+            pi_cl_ram_read_wait(&buff_req1);
+          pi_cl_ram_read(&ram, L3_weights_internal + cumulative_weights_dimension_cnn[i+1], transfer_weights, check_weights_dimension_cnn[i+1], &buff_req1);
+          if (L3_layers_cnn[i] == 1)
+            pi_cl_ram_read_wait(&buff_req1);
+        }
       }
-      // TODO: When the last run is reached, load weights of first TCN layer
 
   #ifdef PROFILE_APPLICATION
       pi_perf_stop();
@@ -1165,10 +1170,13 @@ void network_run(unsigned int L3_weights_size_cnn, unsigned int L3_weights_size_
             check_weights_dimension_cnn[i],
             begin_end_n // begin is 1, end is 0
             );
-        if (layer_with_weights_cnn[(i+1)%${len(PULP_Nodes_Graph_cnn)}] == 1) // TODO: Do this properly when we want to load the TCN weights
+        if (i < ${len(PULP_Nodes_Graph_cnn)-1})
         {
-          d_buffering_weights_e = !d_buffering_weights_e;
-          exec_weights = d_buffering_weights_e ? L2_weights_2 : L2_weights_1;
+          if (layer_with_weights_cnn[i+1] == 1)
+          {
+            d_buffering_weights_e = !d_buffering_weights_e;
+            exec_weights = d_buffering_weights_e ? L2_weights_2 : L2_weights_1;
+          }
         }
 
         // deallocation of input activations
@@ -1308,42 +1316,6 @@ void network_run(unsigned int L3_weights_size_cnn, unsigned int L3_weights_size_
             }
             d_buffering_weights_t = !d_buffering_weights_t;
             transfer_weights = d_buffering_weights_t ? L2_weights_2 : L2_weights_1;
-          }
-        }
-        else
-        {
-          // when reached the last layers, either allocate again the weights of the CNN or the weights of the TCN
-          if (t < ${test_inputs_cnn-1})
-          {
-            // allocate again the first weight layers of the CNN
-            if (layer_with_weights_cnn[${2-len(PULP_Nodes_Graph_cnn)}+i] == 1)
-            {
-              if (d_buffering_weights_e==1)
-              {
-                dory_L2_alloc(&L2_buffer_allocation,
-                  &L2_buffer_allocation_end,
-                  &L2_weights_1,
-                  check_weights_dimension_cnn[${2-len(PULP_Nodes_Graph_cnn)}+i],
-                  begin_end_n // begin is 1, end is 0
-                  );
-              }
-              else
-              {
-                dory_L2_alloc(&L2_buffer_allocation,
-                  &L2_buffer_allocation_end,
-                  &L2_weights_2,
-                  check_weights_dimension_cnn[${2-len(PULP_Nodes_Graph_cnn)}+i],
-                  begin_end_n // begin is 1, end is 0
-                  );
-              }
-              d_buffering_weights_t = !d_buffering_weights_t;
-              transfer_weights = d_buffering_weights_t ? L2_weights_2 : L2_weights_1;
-            }
-          }
-          else
-          {
-            // TODO: allocate weight layers of TCN
-            printf("Allocate weights of TCN (not implemented yet)\n");
           }
         }
         //switching output and input in the buffer for allocation.
