@@ -43,4 +43,7 @@ cp application_dvs/cnn/application/DORY_network/src/xpulp_nn_*.c application_dvs
 cp application_dvs/tcn/application/DORY_network/src/xpulp_nn_conv1d_*.c application_dvs/dvs/application/DORY_network/src
 cp application_dvs/tcn/application/DORY_network/*weights.hex application_dvs/dvs/application/DORY_network
 
+rm -r application_dvs/cnn application_dvs/tcn
+mv application_dvs/dvs/application/* application_dvs
+rm -r application_dvs/dvs
 rm -r application
