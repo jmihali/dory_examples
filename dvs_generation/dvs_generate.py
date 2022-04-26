@@ -32,7 +32,7 @@ def combine_makefile_template_dicts(template_data_cnn, template_data_tcn):
             lst = template_data_cnn[key]+template_data_tcn[key]
             # remove duplicate files
             template_data_dvs[key] = list(dict.fromkeys(lst))
-
+    template_data_dvs['build_layers'].append('network_cnn.c')
     return template_data_dvs
 
 def main():
@@ -55,6 +55,35 @@ def main():
     tmpl = Template(filename="./templates/network_template.c")
     s = tmpl.render(**tk_net_dvs)
     save_string = './application/DORY_network/src/network.c'
+    with open(save_string, "w") as f:
+        f.write(s)
+
+    # write network.h file
+    tk_net_dvs = combine_network_template_dicts(tk_net_cnn, tk_net_tcn)
+    tmpl = Template(filename="./templates/network.h")
+    s = tmpl.render(**tk_net_dvs)
+    save_string = './application/DORY_network/inc/network.h'
+    with open(save_string, "w") as f:
+        f.write(s)
+
+    # write network_cnn.c file
+    tmpl = Template(filename="./templates/network_cnn_template.c")
+    s = tmpl.render(**tk_net_dvs)
+    save_string = './application/DORY_network/src/network_cnn.c'
+    with open(save_string, "w") as f:
+        f.write(s)
+
+    # write utils.h file
+    tmpl = Template(filename="./templates/utils.h")
+    s = tmpl.render(**tk_net_dvs)
+    save_string = './application/DORY_network/inc/utils.h'
+    with open(save_string, "w") as f:
+        f.write(s)
+
+    # write variables.h file
+    tmpl = Template(filename="./templates/variables.h")
+    s = tmpl.render(**tk_net_dvs)
+    save_string = './application/DORY_network/inc/variables.h'
     with open(save_string, "w") as f:
         f.write(s)
 
