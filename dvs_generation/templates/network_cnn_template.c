@@ -152,6 +152,10 @@ void network_run_cnn(void *args, struct pi_device *ram)
 /* -------- SECTION 1 BEGIN --------- */
 /* ---------------------------------- */
 
+printf("----------------------------------\n");
+printf("------------ CNN PART ------------\n");
+printf("----------------------------------\n");
+
  for(int t = 0; t < ${test_inputs_cnn}; t++)
  {
   printf("=====FEEDING WINDOW %d THROUGH THE CNN...=====\n", t);

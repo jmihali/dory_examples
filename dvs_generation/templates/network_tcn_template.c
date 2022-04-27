@@ -129,6 +129,10 @@ void network_run_tcn(void *args, struct pi_device *ram)
 /* -------- SECTION 1 BEGIN --------- */
 /* ---------------------------------- */
 
+printf("----------------------------------\n");
+printf("------------ TCN PART ------------\n");
+printf("----------------------------------\n");
+
   if(pi_core_id()==0)
   {
  #ifdef PROFILE_APPLICATION
