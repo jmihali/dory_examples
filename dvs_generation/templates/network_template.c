@@ -33,6 +33,7 @@
 #include "utils.h"
 #include "variables.h"
 #include "network_cnn.h"
+#include "network_tcn.h"
 
 % if sdk == 'pulp_sdk':
 unsigned int PMU_set_voltage(unsigned int Voltage, unsigned int CheckFrequencies)
@@ -250,11 +251,12 @@ int memId;
 char* L2_output;
 char* L2_output_window;
 char* L2_input;
-char* L2_input_window;
+char* L2_input_window_cnn;
+char* L2_input_tcn;
 char* L2_weights_1;
 char* L2_weights_2;
 char* L2_buffer_allocation;
-char* L2_buffer_tofree_copy;
+char* L2_buffer_tofree;
 int L2_buffer_allocation_end;
 ${type} *l1_buffer;
 uint8_t * bypass_activations;
@@ -264,28 +266,21 @@ int L3_weights_internal;
 
 void network_run(unsigned int L3_weights_size_cnn, unsigned int L3_weights_size_tcn)
 {
-  // todo: remove the args that are not needed. also from the network_run() function declaration
-  unsigned int args[18] = {
+  unsigned int args[9] = {
     L3_weights,
     L3_input,
     L3_output,
     activations_input,
-    L2_output_window,
-    L2_input_window,
-    L2_weights_1,
-    L2_weights_2,
+    L2_input,
     L2_buffer_allocation,
-    L2_buffer_tofree_copy,
     L2_buffer_allocation_end,
-    l1_buffer,
-    bypass_activations,
-    activation_to_keep,
-    exec_weights,
-    transfer_weights,
-    bypass_weights,
-    L3_weights_internal
+    L2_buffer_tofree,
+    l1_buffer
   };
   network_run_cnn(args, &ram);
+  args[0] = L3_weights + cumulative_weights_dimension_cnn[9]; // set pointer to the TCN weights
+  args[4] = args[5] - check_activations_dimension_tcn[0]; // set pointer to the TCN inputs
+  network_run_tcn(args, &ram);
 }
 
 // on cluster function execution

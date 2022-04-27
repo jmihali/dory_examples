@@ -33,6 +33,7 @@ def combine_makefile_template_dicts(template_data_cnn, template_data_tcn):
             # remove duplicate files
             template_data_dvs[key] = list(dict.fromkeys(lst))
     template_data_dvs['build_layers'].append('network_cnn.c')
+    template_data_dvs['build_layers'].append('network_tcn.c')
     return template_data_dvs
 
 def main():
@@ -70,6 +71,13 @@ def main():
     tmpl = Template(filename="./templates/network_cnn_template.c")
     s = tmpl.render(**tk_net_dvs)
     save_string = './application/DORY_network/src/network_cnn.c'
+    with open(save_string, "w") as f:
+        f.write(s)
+
+    # write network_tcn.c file
+    tmpl = Template(filename="./templates/network_tcn_template.c")
+    s = tmpl.render(**tk_net_dvs)
+    save_string = './application/DORY_network/src/network_tcn.c'
     with open(save_string, "w") as f:
         f.write(s)
 
