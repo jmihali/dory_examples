@@ -181,7 +181,7 @@ void network_run_cnn(void *args, struct pi_device *ram)
  % else:
     dory_L2_alloc(&L2_buffer_allocation,
       &L2_buffer_allocation_end,
-      &L2_input,
+      &L2_input_window,
       ${int(PULP_Nodes_Graph_cnn[0]['input_activation_dimensions'])},
       begin_end_n // begin is 1, end is 0
       );
@@ -595,13 +595,15 @@ void network_run_cnn(void *args, struct pi_device *ram)
             residual_number++;
           }
         }
-        dory_L2_alloc(&L2_buffer_allocation,
-          &L2_buffer_allocation_end,
-          &L2_output_window,
-          check_activations_out_dimension_cnn[i+1],
-          begin_end_n // begin is 1, end is 0
-          );
-
+        if (i < ${len(PULP_Nodes_Graph_cnn) - 1})
+        {
+          dory_L2_alloc(&L2_buffer_allocation,
+            &L2_buffer_allocation_end,
+            &L2_output_window,
+            check_activations_out_dimension_cnn[i+1],
+            begin_end_n // begin is 1, end is 0
+            );
+        }
         if (i < ${len(PULP_Nodes_Graph_cnn) - 2})
         {
           // allocation of weights for next next layer, if necessary.
