@@ -47,6 +47,7 @@ def main():
     parser.add_argument('--optional', default = 'auto', help = 'auto (based on layer precision, 8bits or mixed-sw), 8bit, mixed-hw, mixed-sw')
     parser.add_argument('--number_of_deployed_layers', type=int, default = 100, help = 'Number of layers in the target architecture.')
     parser.add_argument('--number_of_test_inputs', type=int, default = 1, help = 'Number of test input files to be fed to the network.')
+    parser.add_argument('--ternary_compression', required=False, action='store_true', help="Compress the weights and input activations before dumping to the .hex files (5 trits to 8 bits)")
 
 
     args = parser.parse_args()
@@ -78,7 +79,7 @@ def main():
         from Model_deployment_Occamy import Model_deployment_Occamy as model_deploy
         type_data = 'float'
 
-    model_deploy('GAP8', args.chip, args.number_of_test_inputs).print_model_network(PULP_Nodes_Graph,
+    model_deploy('GAP8', args.chip, args.number_of_test_inputs, args.ternary_compression).print_model_network(PULP_Nodes_Graph,
                             args.number_of_deployed_layers,
                             args.network_dir,
                             100,
