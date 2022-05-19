@@ -48,7 +48,7 @@ def main():
     parser.add_argument('--number_of_deployed_layers', type=int, default = 100, help = 'Number of layers in the target architecture.')
     parser.add_argument('--number_of_test_inputs', type=int, default = 1, help = 'Number of test input files to be fed to the network.')
     parser.add_argument('--ternary_compression', required=False, action='store_true', help="Compress the weights and input activations before dumping to the .hex files (5 trits to 8 bits)")
-
+    parser.add_argument('--signed_input', required=False, action='store_true')
 
     args = parser.parse_args()
 
@@ -68,7 +68,7 @@ def main():
         sys.path.append('../Frontend/Quantlab/')
         from QUANTLAB_Onnx import Quantlab_onnx as onnx_manager
 
-    PULP_Nodes_Graph = onnx_manager(args.network_dir + net, 'GAP8').onnx_to_PULP()
+    PULP_Nodes_Graph = onnx_manager(args.network_dir + net, 'GAP8', signed_input=args.signed_input).onnx_to_PULP()
 
     if args.backend == 'MCU':
         sys.path.append('../NN_Deployment/MCU/')

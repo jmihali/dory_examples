@@ -10,7 +10,7 @@ mkdir -p application_dvs/dvs
 
 # generate CNN; we set --number_of_deployed_layers=10 to leave out the final GlobalAvgPooling layer
 echo 'Generating CNN network...'
-python network_generate.py --network_dir ./examples/Quantlab_examples/dvs_cnn/dvs/cnn/ --sdk pulp_sdk --frontend Quantlab --backend MCU --number_of_deployed_layers=10 --optional mixed-hw --perf_layer Yes --number_of_test_inputs=5
+python network_generate.py --network_dir ./examples/Quantlab_examples/dvs_cnn/dvs/cnn/ --sdk pulp_sdk --frontend Quantlab --backend MCU --number_of_deployed_layers=10 --optional mixed-hw --perf_layer Yes --number_of_test_inputs=5 --signed_input
 cp -r application application_dvs/cnn
 cp -r logs application_dvs/cnn
 cp -r examples/Quantlab_examples/dvs_cnn/cnn/* application_dvs/cnn/net
